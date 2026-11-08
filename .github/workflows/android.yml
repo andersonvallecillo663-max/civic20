@@ -1,8 +1,10 @@
-name: Compilar Civic Launcher APK
+name: Construir APK Civic
 
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -13,32 +15,38 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+
     steps:
       - name: Descargar proyecto
         uses: actions/checkout@v4
 
-      - name: Instalar Java 17
+      - name: Instalar Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
+      - name: Verificar Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls "$ANDROID_HOME"
+          ls "$ANDROID_HOME/platform-tools"
+
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Configurar Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Preparar Gradle
+      - name: Preparar proyecto
         run: chmod +x ./gradlew
 
-      - name: Compilar aplicación
+      - name: Compilar Civic Launcher
         run: ./gradlew --no-daemon assembleDebug
 
-      - name: Guardar archivo APK
+      - name: Descargar APK
         uses: actions/upload-artifact@v4
         with:
           name: Civic-Launcher-APK
-          path: '**/build/outputs/apk/**/*.apk'
+          path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
-          retention-days: 7
